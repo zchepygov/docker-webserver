@@ -1,50 +1,60 @@
 version: '3'
 
 services:
-  php:
+  apache:
     build:
       context: .
-      dockerfile: Dockerfile
-    image: php:8.2-fpm
-    container_name: vp-php
-    volumes:
-      - './:/var/www/html'
-    networks:
-      - vp-network
-
-  composer:
-    image: composer:latest
-    container_name: vp-composer
-    volumes:
-      - './:/var/www/html'
-    depends_on:
-      - php
-    networks:
-      - vp-network
-
-  apache:
+      dockerfile: ./config/apache/Dockerfile
     image: httpd:latest
-    container_name: vp-apache
+    container_name: web-apache
     ports:
       - "80:80"
     volumes:
-      - './:/var/www/html'
-      - './docker:/usr/local/apache2/htdocs'
+      - './app:/var/www/html'
+      - './config/apache/apache.conf:/usr/local/apache2/conf/extra/apache.conf'
     depends_on:
       - php
     networks:
-      - vp-network
+      - web-network
+
+  php:
+    build:
+      context: .
+      dockerfile: ./config/php/Dockerfile
+    image: php:8.2-fpm
+    container_name: web-php
+    volumes:
+      - './app:/var/www/html'
+      - './config/php/php.ini:/usr/local/etc/php/php.ini'
+    networks:
+      - web-network
+
+  composer:
+    image: composer:latest
+    container_name: web-composer
+    volumes:
+      - './app:/var/www/html'
+    depends_on:
+      - php
+    networks:
+      - web-network
 
   mysql:
     image: mysql:8
-    container_name: vp-mysql
+    container_name: web-mysql
     environment:
       - MYSQL_ROOT_PASSWORD=root
     ports:
       - "3306:3306"
     networks:
-      - vp-network
+      - web-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    platform: linux/amd64
+    ports:
+      - "8081:8081"
 
 networks:
-  vp-network:
+  web-network:
     driver: bridge

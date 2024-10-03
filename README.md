@@ -1,6 +1,7 @@
 # Webserver on docker
 
 - apache
-- php
-- mysql
+- php 8.2-fpm
+- composer
+- mysql 8
 - phpmyadmin
